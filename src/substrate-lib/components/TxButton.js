@@ -133,8 +133,10 @@ function TxButton({
 
   const signedTx = async () => {
     const fromAcct = await getFromAcct()
-    const transformed = transformParams(paramFields, inputParams)
+    let transformed = transformParams(paramFields, inputParams)
     // transformed can be empty parameters
+
+    console.log(transformed)
 
     const txExecute = transformed
       ? api.tx[palletRpc][callable](...transformed)
@@ -143,6 +145,8 @@ function TxButton({
     const unsub = await txExecute
       .signAndSend(...fromAcct, txResHandler)
       .catch(txErrHandler)
+
+    console.log(unsub)
 
     setUnsub(() => unsub)
   }
@@ -219,13 +223,28 @@ function TxButton({
     // if `opts.emptyAsNull` is true, empty param value will be added to res as `null`.
     //   Otherwise, it will not be added
     const paramVal = inputParams.map(inputParam => {
+      console.log('paramVal', inputParam)
       // To cater the js quirk that `null` is a type of `object`.
       if (
         typeof inputParam === 'object' &&
         inputParam !== null &&
         typeof inputParam.value === 'string'
       ) {
-        return inputParam.value.trim()
+        let isStr = true;
+        if (
+          [
+            'PalletInfimumPublicKey',
+          ].includes(inputParam.type)
+        )
+        {
+          try
+          {
+            inputParam.value = JSON.parse(inputParam.value);
+            isStr = false;
+          }
+          catch(err) {/* */}
+        }
+        return isStr ? inputParam.value.trim() : inputParam.value
       } else if (typeof inputParam === 'string') {
         return inputParam.trim()
       }
@@ -244,7 +263,12 @@ function TxButton({
 
       // Deal with a vector
       if (type.indexOf('Vec<') >= 0) {
+        console.log(converted, type)
+
         converted = converted.split(',').map(e => e.trim())
+
+        console.log(converted)
+
         converted = converted.map(single =>
           isNumType(type)
             ? single.indexOf('.') >= 0
@@ -252,6 +276,9 @@ function TxButton({
               : Number.parseInt(single)
             : single
         )
+
+        console.log(converted)
+
         return [...memo, converted]
       }
 

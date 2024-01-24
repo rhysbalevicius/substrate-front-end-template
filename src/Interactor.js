@@ -221,7 +221,12 @@ function Main(props) {
             options={callables}
           />
         </Form.Field>
-        {paramFields.map((paramField, ind) => (
+        {paramFields.map((paramField, ind) => 
+        {
+          console.log(paramField, ind);
+          let _v = inputParams[ind] ? inputParams[ind].value : '';
+          if (typeof _v === 'object') _v = JSON.stringify(_v);
+          return (
           <Form.Field key={`${paramField.name}-${paramField.type}`}>
             <Input
               placeholder={paramField.type}
@@ -229,7 +234,7 @@ function Main(props) {
               type="text"
               label={paramField.name}
               state={{ ind, paramField }}
-              value={inputParams[ind] ? inputParams[ind].value : ''}
+              value={_v}
               onChange={onPalletCallableParamChange}
             />
             {paramField.optional ? (
@@ -241,7 +246,7 @@ function Main(props) {
               />
             ) : null}
           </Form.Field>
-        ))}
+        )})}
         <Form.Field style={{ textAlign: 'center' }}>
           <InteractorSubmit
             setStatus={setStatus}
